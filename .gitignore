@@ -1,0 +1,18 @@
+# Backend
+backend/.venv/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.env
+backend/data/
+backend/uploads/
+backend/static/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Editor/OS
+.vscode/
+.DS_Store

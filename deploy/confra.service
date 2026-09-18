@@ -1,0 +1,24 @@
+[Unit]
+Description=Confraternizacao SEAD 2026 - backend (FastAPI/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+# Ajuste usuario/grupo para um usuario sem privilegios dedicado a este app (nao usar root).
+User=confra
+Group=confra
+WorkingDirectory=/opt/confra/backend
+# O app le o .env sozinho (pydantic-settings) a partir do WorkingDirectory acima.
+# Porta 33269 escolhida por ser alta/incomum, para nao colidir com outros apps
+# ja hospedados nesta VPS. Confirme que esta livre antes do deploy: sudo ss -tlnp | grep 33269
+ExecStart=/opt/confra/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 33269 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=on-failure
+RestartSec=5
+
+# Hardening basico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
