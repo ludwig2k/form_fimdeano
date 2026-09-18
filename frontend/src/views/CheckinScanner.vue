@@ -6,11 +6,23 @@
     </header>
 
     <main class="max-w-md mx-auto px-4 py-6">
-      <div id="qr-reader" class="rounded-xl overflow-hidden shadow" :class="{ hidden: !cameraDisponivel }"></div>
+      <div v-if="!cameraDisponivel" class="flex flex-col items-center gap-3">
+        <button
+          class="bg-confra-green text-white px-5 py-3 rounded-lg font-semibold w-full"
+          :disabled="abrindoCamera"
+          @click="abrirCamera"
+        >
+          {{ abrindoCamera ? 'Abrindo câmera...' : '📷 Abrir câmera' }}
+        </button>
+        <p v-if="erroCamera" class="text-sm text-yellow-800 bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 w-full">
+          Não foi possível acessar a câmera ({{ erroCamera }}). Use a leitura manual abaixo.
+        </p>
+        <p v-else class="text-xs text-gray-500">
+          No celular, o navegador só libera a câmera depois desse toque.
+        </p>
+      </div>
 
-      <p v-if="erroCamera" class="mt-4 text-sm text-yellow-800 bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2">
-        Não foi possível acessar a câmera ({{ erroCamera }}). Use a leitura manual abaixo.
-      </p>
+      <div id="qr-reader" class="rounded-xl overflow-hidden shadow mt-4" :class="{ hidden: !cameraDisponivel }"></div>
 
       <form class="mt-4 bg-white rounded-xl shadow p-4 flex gap-2" @submit.prevent="validarManual">
         <input
@@ -50,6 +62,7 @@ const auth = useAuthStore()
 const resultado = ref(null)
 const erroCamera = ref('')
 const cameraDisponivel = ref(false)
+const abrindoCamera = ref(false)
 const codigoManual = ref('')
 let scanner = null
 let processando = false
@@ -87,13 +100,9 @@ function continuarEscaneando() {
   }
 }
 
-function sair() {
-  auth.logout()
-  router.push({ name: 'checkin-login' })
-}
-
-onMounted(async () => {
-  scanner = new Html5Qrcode('qr-reader')
+async function abrirCamera() {
+  erroCamera.value = ''
+  abrindoCamera.value = true
   try {
     await scanner.start(
       { facingMode: 'environment' },
@@ -104,7 +113,18 @@ onMounted(async () => {
     cameraDisponivel.value = true
   } catch (e) {
     erroCamera.value = e?.message || String(e)
+  } finally {
+    abrindoCamera.value = false
   }
+}
+
+function sair() {
+  auth.logout()
+  router.push({ name: 'checkin-login' })
+}
+
+onMounted(() => {
+  scanner = new Html5Qrcode('qr-reader')
 })
 
 onBeforeUnmount(async () => {
