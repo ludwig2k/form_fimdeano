@@ -8,6 +8,9 @@ Confraternização de Fim de Ano da SEAD (18/12/2026, ASMEGO).
 - Sem Docker: o backend serve os arquivos estáticos do build do frontend diretamente
   (não precisa de Nginx nem containers).
 
+Para testar manualmente o sistema (roteiro de testes, credenciais, páginas e
+referência da API), veja **[GUIA_DE_TESTES.md](GUIA_DE_TESTES.md)**.
+
 ## Requisitos
 
 - Python 3.12+
