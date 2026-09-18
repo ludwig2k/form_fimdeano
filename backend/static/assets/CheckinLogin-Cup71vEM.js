@@ -1,1 +1,0 @@
-import{_ as e}from"./StaffLoginForm-C6VK5Qxx.js";import{q as c,a as n}from"./index-jCkQCUnu.js";import"./client-BfLUIa-5.js";const s={__name:"CheckinLogin",setup(o){return(r,t)=>(n(),c(e,{titulo:"Check-in do Evento","login-path":"/checkin/login",role:"checkin","redirect-name":"checkin-scanner"}))}};export{s as default};

@@ -65,6 +65,7 @@ class InscricaoAdminOut(BaseModel):
     checked_in_at: datetime | None
     created_at: datetime
     comprovante_mime: str
+    email_enviado: bool = True
 
     model_config = {"from_attributes": True}
 

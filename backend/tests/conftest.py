@@ -12,6 +12,10 @@ os.environ["ADMIN_PASSWORD"] = "admin123"
 os.environ["CHECKIN_USERNAME"] = "checkin"
 os.environ["CHECKIN_PASSWORD"] = "checkin123"
 os.environ["SECRET_KEY"] = "test-secret-key"
+# Nunca usar o SMTP real do .env local nos testes: força o fallback de
+# console (email_service._send apenas loga) para os testes ficarem rápidos,
+# determinísticos e sem depender de rede.
+os.environ["SMTP_HOST"] = ""
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

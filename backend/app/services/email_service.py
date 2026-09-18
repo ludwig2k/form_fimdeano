@@ -25,7 +25,7 @@ def _send(to_email: str, subject: str, html_body: str, inline_images: dict[str, 
         image.add_header("Content-Disposition", "inline", filename=f"{content_id}.png")
         msg.attach(image)
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as server:
         if settings.smtp_use_tls:
             server.starttls()
         if settings.smtp_user:

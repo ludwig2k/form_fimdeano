@@ -5,6 +5,15 @@
       <button class="text-sm underline" @click="sair">Sair</button>
     </header>
 
+    <div
+      v-if="mensagem"
+      class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] rounded-lg shadow-lg px-4 py-3 text-sm font-semibold flex items-start gap-2"
+      :class="mensagem.tipo === 'erro' ? 'bg-red-600 text-white' : 'bg-confra-green text-white'"
+    >
+      <span class="flex-1">{{ mensagem.texto }}</span>
+      <button class="text-white/80 hover:text-white" @click="mensagem = null">✕</button>
+    </div>
+
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
       <section>
         <div class="flex gap-2 mb-4 flex-wrap">
@@ -131,6 +140,21 @@ const carregando = ref(true)
 const mostrarCatalogo = ref(false)
 const rejeicaoAlvo = ref(null)
 const motivoRejeicao = ref('')
+const mensagem = ref(null)
+let mensagemTimeout = null
+
+function avisar(tipo, texto) {
+  mensagem.value = { tipo, texto }
+  clearTimeout(mensagemTimeout)
+  mensagemTimeout = setTimeout(() => {
+    mensagem.value = null
+  }, 6000)
+}
+
+function mensagemErro(erro, padrao) {
+  const detail = erro.response?.data?.detail
+  return Array.isArray(detail) ? detail.join(' ') : detail || padrao
+}
 
 async function carregar() {
   carregando.value = true
@@ -153,13 +177,28 @@ async function verComprovante(id) {
 
 async function excluir(id) {
   if (!confirm('Tem certeza que deseja excluir esta inscrição? Essa ação não pode ser desfeita.')) return
-  await client.delete(`/admin/inscricoes/${id}`)
-  await carregar()
+  try {
+    await client.delete(`/admin/inscricoes/${id}`)
+    avisar('sucesso', 'Inscrição excluída.')
+    await carregar()
+  } catch (e) {
+    avisar('erro', mensagemErro(e, 'Não foi possível excluir a inscrição.'))
+  }
 }
 
 async function aprovar(id) {
-  await client.post(`/admin/inscricoes/${id}/aprovar`)
-  await carregar()
+  if (!confirm('Aprovar esta inscrição? Um e-mail com o QR Code de entrada será enviado ao servidor.')) return
+  try {
+    const resp = await client.post(`/admin/inscricoes/${id}/aprovar`)
+    if (resp.data.email_enviado === false) {
+      avisar('erro', 'Inscrição aprovada, mas o e-mail de confirmação falhou ao enviar. Verifique a configuração de SMTP.')
+    } else {
+      avisar('sucesso', 'Inscrição aprovada e e-mail enviado.')
+    }
+    await carregar()
+  } catch (e) {
+    avisar('erro', mensagemErro(e, 'Não foi possível aprovar a inscrição.'))
+  }
 }
 
 function abrirRejeicao(id) {
@@ -169,9 +208,18 @@ function abrirRejeicao(id) {
 
 async function confirmarRejeicao() {
   if (!motivoRejeicao.value.trim()) return
-  await client.post(`/admin/inscricoes/${rejeicaoAlvo.value}/rejeitar`, { motivo: motivoRejeicao.value })
-  rejeicaoAlvo.value = null
-  await carregar()
+  try {
+    const resp = await client.post(`/admin/inscricoes/${rejeicaoAlvo.value}/rejeitar`, { motivo: motivoRejeicao.value })
+    rejeicaoAlvo.value = null
+    if (resp.data.email_enviado === false) {
+      avisar('erro', 'Inscrição rejeitada, mas o e-mail ao servidor falhou ao enviar. Verifique a configuração de SMTP.')
+    } else {
+      avisar('sucesso', 'Inscrição rejeitada e e-mail enviado.')
+    }
+    await carregar()
+  } catch (e) {
+    avisar('erro', mensagemErro(e, 'Não foi possível rejeitar a inscrição.'))
+  }
 }
 
 function sair() {

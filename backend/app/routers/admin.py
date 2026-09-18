@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -69,9 +71,18 @@ def aprovar_inscricao(inscricao_id: int, db: Session = Depends(get_db), _: str =
     db.commit()
     db.refresh(inscricao)
 
-    qr_bytes = qrcode_service.generate_qr_png_bytes(inscricao.qr_token)
-    email_service.send_aprovacao_email(inscricao.email, inscricao.nome_completo, inscricao.qr_token, qr_bytes)
-    return inscricao
+    email_enviado = True
+    try:
+        qr_bytes = qrcode_service.generate_qr_png_bytes(inscricao.qr_token)
+        email_service.send_aprovacao_email(inscricao.email, inscricao.nome_completo, inscricao.qr_token, qr_bytes)
+    except Exception:
+        email_enviado = False
+        print(f"[admin] Falha ao enviar e-mail de aprovacao para {inscricao.email}:")
+        print(traceback.format_exc())
+
+    resultado = schemas.InscricaoAdminOut.model_validate(inscricao)
+    resultado.email_enviado = email_enviado
+    return resultado
 
 
 @router.post("/inscricoes/{inscricao_id}/rejeitar", response_model=schemas.InscricaoAdminOut)
@@ -90,9 +101,18 @@ def rejeitar_inscricao(
     db.commit()
     db.refresh(inscricao)
 
-    reenvio_url = f"{settings.public_base_url}/reenvio/{inscricao.reenvio_token}"
-    email_service.send_rejeicao_email(inscricao.email, inscricao.nome_completo, payload.motivo, reenvio_url)
-    return inscricao
+    email_enviado = True
+    try:
+        reenvio_url = f"{settings.public_base_url}/reenvio/{inscricao.reenvio_token}"
+        email_service.send_rejeicao_email(inscricao.email, inscricao.nome_completo, payload.motivo, reenvio_url)
+    except Exception:
+        email_enviado = False
+        print(f"[admin] Falha ao enviar e-mail de rejeicao para {inscricao.email}:")
+        print(traceback.format_exc())
+
+    resultado = schemas.InscricaoAdminOut.model_validate(inscricao)
+    resultado.email_enviado = email_enviado
+    return resultado
 
 
 @router.get("/unidades", response_model=list[schemas.UnidadeOut])
