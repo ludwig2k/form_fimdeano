@@ -1,30 +1,20 @@
 # Deploy em produção — VPS Ubuntu (Hostinger)
 
 Este guia assume uma VPS Ubuntu onde você já hospeda outros apps (Nginx já
-instalado). A ideia é manter a pegada da aplicação mínima: **o servidor não
-precisa ter Node.js instalado** — o build do frontend é feito na sua máquina e
-só o resultado (`backend/static/`) vai para a VPS, junto com o backend Python.
+instalado). O código vem do repositório
+[github.com/ludwig2k/form_fimdeano](https://github.com/ludwig2k/form_fimdeano)
+via `git clone`/`git pull`. A ideia é manter a pegada da aplicação mínima:
+**o servidor não precisa ter Node.js instalado** — `backend/static/` é gerado
+pelo build do frontend na sua máquina e sincronizado à parte, porque é o único
+diretório que fica de fora do Git (é build artifact, ver `.gitignore`).
 
-## 1. Build local do frontend
+## 1. Preparar a VPS
 
-Na sua máquina (não na VPS):
-
-```
-cd frontend
-npm install
-npm run build
-```
-
-Isso gera `backend/static/` com os arquivos prontos — o `backend/` já fica
-completo e autossuficiente para copiar para o servidor.
-
-## 2. Preparar a VPS
-
-Prerequisitos (instale o que faltar):
+Pré-requisitos (instale o que faltar):
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv nginx certbot python3-certbot-nginx
+sudo apt install -y python3 python3-venv git nginx certbot python3-certbot-nginx
 ```
 
 Crie um usuário de sistema dedicado ao app (não rode como root nem com seu
@@ -36,17 +26,39 @@ sudo mkdir -p /opt/confra
 sudo chown confra:confra /opt/confra
 ```
 
-## 3. Copiar os arquivos
-
-Da sua máquina, envie a pasta `backend/` (já com `static/` dentro) para a VPS:
+## 2. Clonar o repositório
 
 ```bash
-rsync -avz --exclude '.venv' --exclude 'data' --exclude 'uploads' \
-  backend/ usuario@seu-ip-vps:/opt/confra/backend/
+sudo -u confra git clone https://github.com/ludwig2k/form_fimdeano.git /opt/confra
 ```
 
-(`data/` e `uploads/` ficam de fora porque são gerados no próprio servidor —
-não faz sentido subir o banco/comprovantes de teste local.)
+Isso já cria `/opt/confra/backend` e `/opt/confra/frontend` com o código
+completo (menos `data/`, `uploads/`, `static/`, `.venv/` e `.env` — todos
+gitignored de propósito).
+
+Se o repositório for privado, `git clone` por HTTPS vai pedir usuário/senha
+(GitHub não aceita mais senha de conta, precisa de um
+[personal access token](https://github.com/settings/tokens)) — ou, mais
+prático para deploy automatizado, gere uma
+[deploy key SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys)
+no repositório e clone via `git@github.com:ludwig2k/form_fimdeano.git`.
+
+## 3. Build do frontend e envio de `static/`
+
+Na sua máquina (não na VPS — ela não precisa de Node instalado):
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Isso gera `backend/static/`. Envie só essa pasta para a VPS (é a única parte
+que não vem pelo Git):
+
+```bash
+rsync -avz backend/static/ usuario@seu-ip-vps:/opt/confra/backend/static/
+```
 
 ## 4. Ambiente virtual e dependências
 
@@ -56,8 +68,7 @@ Na VPS:
 cd /opt/confra/backend
 sudo -u confra python3 -m venv .venv
 sudo -u confra .venv/bin/pip install -r requirements.txt
-sudo mkdir -p data uploads
-sudo chown -R confra:confra /opt/confra
+sudo -u confra mkdir -p data uploads
 ```
 
 ## 5. Configurar o `.env` de produção
@@ -90,7 +101,7 @@ de reenvio de comprovante.
 Copie o arquivo de exemplo e ajuste usuário/caminho se você usou outro:
 
 ```bash
-sudo cp deploy/confra.service /etc/systemd/system/confra.service
+sudo cp /opt/confra/deploy/confra.service /etc/systemd/system/confra.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now confra
 sudo systemctl status confra
@@ -111,7 +122,7 @@ troque `confra.seudominio.com.br` pelo domínio real, habilite e emita o
 certificado:
 
 ```bash
-sudo cp deploy/nginx.conf.example /etc/nginx/sites-available/confra
+sudo cp /opt/confra/deploy/nginx.conf.example /etc/nginx/sites-available/confra
 sudo nano /etc/nginx/sites-available/confra   # ajustar server_name
 sudo ln -s /etc/nginx/sites-available/confra /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
@@ -148,7 +159,9 @@ sudo crontab -u confra -e
 
 ## 10. Atualizando depois de mudanças no código
 
-1. Local: `cd frontend && npm run build` (atualiza `backend/static/`).
-2. `rsync -avz --exclude '.venv' --exclude 'data' --exclude 'uploads' backend/ usuario@ip:/opt/confra/backend/`
-3. Na VPS, se mudou `requirements.txt`: `sudo -u confra .venv/bin/pip install -r requirements.txt`
-4. `sudo systemctl restart confra`
+1. Local: `git push` para o repositório (depois de commitar as mudanças).
+2. Na VPS: `cd /opt/confra && sudo -u confra git pull`
+3. Se o frontend mudou: local `cd frontend && npm run build`, depois
+   `rsync -avz backend/static/ usuario@ip:/opt/confra/backend/static/`
+4. Se mudou `requirements.txt`: `sudo -u confra /opt/confra/backend/.venv/bin/pip install -r requirements.txt`
+5. `sudo systemctl restart confra`
