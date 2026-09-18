@@ -54,10 +54,19 @@ npm run build
 ```
 
 Isso gera `backend/static/`. Envie só essa pasta para a VPS (é a única parte
-que não vem pelo Git):
+que não vem pelo Git) — troque `usuario` pelo seu usuário SSH na VPS e
+`seu-ip-vps` pelo IP/domínio dela:
 
 ```bash
-rsync -avz backend/static/ usuario@seu-ip-vps:/opt/confra/backend/static/
+# Se tiver rsync disponível (recomendado — só manda o que mudou e mantém
+# o destino espelhado com --delete):
+rsync -avz --delete backend/static/ usuario@seu-ip-vps:/opt/confra/backend/static/
+
+# Alternativa com scp (funciona em qualquer Git Bash do Windows, sem instalar
+# nada a mais). Note que aqui o destino é a pasta backend/, sem "/static" no
+# final — o -r já copia "static" inteira para dentro dela:
+ssh usuario@seu-ip-vps "rm -rf /opt/confra/backend/static"
+scp -r backend/static usuario@seu-ip-vps:/opt/confra/backend/
 ```
 
 ## 4. Ambiente virtual e dependências
@@ -161,7 +170,7 @@ sudo crontab -u confra -e
 
 1. Local: `git push` para o repositório (depois de commitar as mudanças).
 2. Na VPS: `cd /opt/confra && sudo -u confra git pull`
-3. Se o frontend mudou: local `cd frontend && npm run build`, depois
-   `rsync -avz backend/static/ usuario@ip:/opt/confra/backend/static/`
+3. Se o frontend mudou: local `cd frontend && npm run build`, depois envie
+   `backend/static/` de novo (ver comandos de `rsync`/`scp` no passo 3 acima).
 4. Se mudou `requirements.txt`: `sudo -u confra /opt/confra/backend/.venv/bin/pip install -r requirements.txt`
 5. `sudo systemctl restart confra`
