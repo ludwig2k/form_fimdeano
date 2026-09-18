@@ -1,1 +1,0 @@
-import{_ as a}from"./StaffLoginForm-6C__Njet.js";import{q as i,a as o}from"./index-CJkyehJO.js";import"./client-PSOQheLx.js";const _={__name:"AdminLogin",setup(n){return(r,t)=>(o(),i(a,{titulo:"Painel Administrativo","login-path":"/admin/login",role:"admin","redirect-name":"admin-dashboard"}))}};export{_ as default};

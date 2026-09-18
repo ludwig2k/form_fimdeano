@@ -1,1 +1,0 @@
-import{_ as e}from"./StaffLoginForm-6C__Njet.js";import{q as c,a as n}from"./index-CJkyehJO.js";import"./client-PSOQheLx.js";const s={__name:"CheckinLogin",setup(o){return(r,t)=>(n(),c(e,{titulo:"Check-in do Evento","login-path":"/checkin/login",role:"checkin","redirect-name":"checkin-scanner"}))}};export{s as default};

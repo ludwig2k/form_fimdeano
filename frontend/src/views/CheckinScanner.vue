@@ -22,7 +22,7 @@
         </p>
       </div>
 
-      <div id="qr-reader" class="rounded-xl overflow-hidden shadow mt-4" :class="{ hidden: !cameraDisponivel }"></div>
+      <div id="qr-reader" class="rounded-xl overflow-hidden shadow mt-4 min-h-[280px]" :class="{ hidden: !cameraDisponivel }"></div>
 
       <form class="mt-4 bg-white rounded-xl shadow p-4 flex gap-2" @submit.prevent="validarManual">
         <input
@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useAuthStore } from '../stores/auth'
@@ -103,6 +103,12 @@ function continuarEscaneando() {
 async function abrirCamera() {
   erroCamera.value = ''
   abrindoCamera.value = true
+  // Mostra a div ANTES de iniciar a câmera: o html5-qrcode mede o tamanho do
+  // container nesse momento para criar o <video>, e se a div ainda estiver
+  // escondida (display:none) o vídeo nasce com tamanho zero — a câmera liga
+  // (permissão concedida) mas nada aparece na tela.
+  cameraDisponivel.value = true
+  await nextTick()
   try {
     await scanner.start(
       { facingMode: 'environment' },
@@ -110,8 +116,8 @@ async function abrirCamera() {
       (decodedText) => validarToken(decodedText),
       () => {}
     )
-    cameraDisponivel.value = true
   } catch (e) {
+    cameraDisponivel.value = false
     erroCamera.value = e?.message || String(e)
   } finally {
     abrindoCamera.value = false
