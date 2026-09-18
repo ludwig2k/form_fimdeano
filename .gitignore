@@ -7,7 +7,9 @@ backend/.pytest_cache/
 backend/.env
 backend/data/
 backend/uploads/
-backend/static/
+# backend/static/ (build do frontend) é versionado de propósito, para o
+# deploy na VPS ser só um "git pull" — ver DEPLOY.md. Rode "npm run build"
+# antes de commitar quando o frontend mudar.
 
 # Frontend
 frontend/node_modules/
