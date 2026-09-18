@@ -5,14 +5,16 @@
       <button class="text-sm underline" @click="sair">Sair</button>
     </header>
 
-    <div
-      v-if="mensagem"
-      class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] rounded-lg shadow-lg px-4 py-3 text-sm font-semibold flex items-start gap-2"
-      :class="mensagem.tipo === 'erro' ? 'bg-red-600 text-white' : 'bg-confra-green text-white'"
-    >
-      <span class="flex-1">{{ mensagem.texto }}</span>
-      <button class="text-white/80 hover:text-white" @click="mensagem = null">✕</button>
-    </div>
+    <Transition name="toast">
+      <div
+        v-if="mensagem"
+        class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] rounded-lg shadow-lg px-4 py-3 text-sm font-semibold flex items-start gap-2"
+        :class="mensagem.tipo === 'erro' ? 'bg-red-600 text-white' : 'bg-confra-green text-white'"
+      >
+        <span class="flex-1">{{ mensagem.texto }}</span>
+        <button class="text-white/80 hover:text-white" @click="mensagem = null">✕</button>
+      </div>
+    </Transition>
 
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
       <section>
@@ -63,7 +65,7 @@
               <button
                 v-if="i.status !== 'aprovado'"
                 class="text-sm bg-confra-green text-white px-3 py-1.5 rounded-lg font-semibold"
-                @click="aprovar(i.id)"
+                @click="pedirConfirmacao('aprovar', i.id)"
               >
                 Aprovar
               </button>
@@ -76,7 +78,7 @@
               </button>
               <button
                 class="text-sm text-gray-500 font-semibold underline ml-auto"
-                @click="excluir(i.id)"
+                @click="pedirConfirmacao('excluir', i.id)"
               >
                 Excluir
               </button>
@@ -97,32 +99,49 @@
       </section>
     </main>
 
-    <div v-if="rejeicaoAlvo" class="fixed inset-0 bg-black/40 flex items-center justify-center px-4">
-      <div class="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
-        <h3 class="font-bold text-confra-green mb-2">Motivo da rejeição</h3>
-        <textarea
-          v-model="motivoRejeicao"
-          rows="3"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2"
-          placeholder="Ex: valor do comprovante não confere com o valor da inscrição."
-        ></textarea>
-        <div class="flex gap-3 mt-4 justify-end">
-          <button class="px-4 py-2 text-gray-500" @click="rejeicaoAlvo = null">Cancelar</button>
-          <button class="px-4 py-2 bg-confra-red text-white rounded-lg font-semibold" @click="confirmarRejeicao">
-            Confirmar
-          </button>
+    <Transition name="modal">
+      <ConfirmModal
+        v-if="confirmacaoAlvo"
+        :title="tituloConfirmacao"
+        :message="mensagemConfirmacao"
+        :confirm-label="confirmacaoAlvo.tipo === 'excluir' ? 'Excluir' : 'Aprovar'"
+        :danger="confirmacaoAlvo.tipo === 'excluir'"
+        @confirm="confirmarAcao"
+        @cancel="confirmacaoAlvo = null"
+      />
+    </Transition>
+
+    <Transition name="modal">
+      <div v-if="rejeicaoAlvo" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+          <h3 class="text-lg font-bold text-confra-green mb-2">Motivo da rejeição</h3>
+          <textarea
+            v-model="motivoRejeicao"
+            rows="3"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2"
+            placeholder="Ex: valor do comprovante não confere com o valor da inscrição."
+          ></textarea>
+          <div class="flex gap-3 mt-4 justify-end">
+            <button class="px-4 py-2 text-gray-500 font-semibold rounded-lg hover:bg-gray-100" @click="rejeicaoAlvo = null">
+              Cancelar
+            </button>
+            <button class="px-4 py-2 bg-confra-red text-white rounded-lg font-semibold" @click="confirmarRejeicao">
+              Confirmar
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import client from '../api/client'
 import CatalogoManager from '../components/CatalogoManager.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -141,7 +160,17 @@ const mostrarCatalogo = ref(false)
 const rejeicaoAlvo = ref(null)
 const motivoRejeicao = ref('')
 const mensagem = ref(null)
+const confirmacaoAlvo = ref(null)
 let mensagemTimeout = null
+
+const tituloConfirmacao = computed(() =>
+  confirmacaoAlvo.value?.tipo === 'excluir' ? 'Excluir inscrição' : 'Aprovar inscrição'
+)
+const mensagemConfirmacao = computed(() =>
+  confirmacaoAlvo.value?.tipo === 'excluir'
+    ? 'Tem certeza que deseja excluir esta inscrição? Essa ação não pode ser desfeita.'
+    : 'Um e-mail com o QR Code de entrada será enviado ao servidor. Deseja continuar?'
+)
 
 function avisar(tipo, texto) {
   mensagem.value = { tipo, texto }
@@ -175,8 +204,21 @@ async function verComprovante(id) {
   window.open(url, '_blank')
 }
 
-async function excluir(id) {
-  if (!confirm('Tem certeza que deseja excluir esta inscrição? Essa ação não pode ser desfeita.')) return
+function pedirConfirmacao(tipo, id) {
+  confirmacaoAlvo.value = { tipo, id }
+}
+
+async function confirmarAcao() {
+  const { tipo, id } = confirmacaoAlvo.value
+  confirmacaoAlvo.value = null
+  if (tipo === 'excluir') {
+    await executarExclusao(id)
+  } else {
+    await executarAprovacao(id)
+  }
+}
+
+async function executarExclusao(id) {
   try {
     await client.delete(`/admin/inscricoes/${id}`)
     avisar('sucesso', 'Inscrição excluída.')
@@ -186,8 +228,7 @@ async function excluir(id) {
   }
 }
 
-async function aprovar(id) {
-  if (!confirm('Aprovar esta inscrição? Um e-mail com o QR Code de entrada será enviado ao servidor.')) return
+async function executarAprovacao(id) {
   try {
     const resp = await client.post(`/admin/inscricoes/${id}/aprovar`)
     if (resp.data.email_enviado === false) {

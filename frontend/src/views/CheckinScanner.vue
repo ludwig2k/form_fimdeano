@@ -34,17 +34,17 @@
         <button class="bg-confra-green text-white px-3 py-2 rounded-lg text-sm font-semibold">Validar</button>
       </form>
 
-      <div v-if="resultado" class="mt-6 rounded-xl p-6 text-center shadow" :class="corResultado">
-        <p class="text-3xl mb-2">{{ resultado.ok ? '✅' : '⚠️' }}</p>
-        <p class="font-bold text-lg">{{ resultado.mensagem }}</p>
-        <template v-if="resultado.nome_completo">
-          <p class="mt-2">{{ resultado.nome_completo }}</p>
-          <p class="text-sm text-gray-600">{{ resultado.unidade }} — {{ resultado.anexo }}</p>
-        </template>
-        <button class="mt-4 text-sm underline font-semibold" @click="continuarEscaneando">
-          Escanear próximo
-        </button>
-      </div>
+      <Transition name="modal">
+        <ResultModal
+          v-if="resultado"
+          :ok="resultado.ok"
+          :mensagem="resultado.mensagem"
+          :nome-completo="resultado.nome_completo"
+          :unidade="resultado.unidade"
+          :anexo="resultado.anexo"
+          @fechar="continuarEscaneando"
+        />
+      </Transition>
     </main>
   </div>
 </template>
@@ -55,6 +55,7 @@ import { useRouter } from 'vue-router'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useAuthStore } from '../stores/auth'
 import client from '../api/client'
+import ResultModal from '../components/ResultModal.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -67,21 +68,17 @@ const codigoManual = ref('')
 let scanner = null
 let processando = false
 
-const corResultado = ref('bg-white')
-
 async function validarToken(qrToken) {
   if (processando || !qrToken) return
   processando = true
   try {
     const resp = await client.post('/checkin/validar', { qr_token: qrToken })
     resultado.value = resp.data
-    corResultado.value = resp.data.ok ? 'bg-green-50 border border-green-300' : 'bg-yellow-50 border border-yellow-300'
     if (scanner && cameraDisponivel.value) {
       await scanner.pause(true)
     }
   } catch (e) {
     resultado.value = { ok: false, mensagem: 'Erro ao validar QR Code.' }
-    corResultado.value = 'bg-red-50 border border-red-300'
   } finally {
     processando = false
   }
