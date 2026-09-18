@@ -1,0 +1,10 @@
+# Normaliza quebra de linha para LF no repositório e no checkout em qualquer
+# sistema operacional. Evita que arquivos apareçam como "modificados" sem
+# nenhuma mudança real de conteúdo ao alternar entre Windows (dev) e Linux (VPS).
+* text=auto eol=lf
+
+# Binários: nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
