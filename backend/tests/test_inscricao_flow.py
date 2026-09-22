@@ -61,6 +61,35 @@ def test_admin_pode_excluir_inscricao(client):
     assert not any(i["id"] == inscricao_id for i in listagem.json())
 
 
+def test_exportar_planilha_exige_autenticacao(client):
+    resp = client.get("/api/admin/inscricoes/exportar")
+    assert resp.status_code == 401
+
+
+def test_exportar_planilha_de_aprovados(client):
+    resp = _submit_inscricao(client, cpf="987.654.321-00", email="planilha@example.com")
+    inscricao_id = resp.json()["id"]
+
+    admin_token = _admin_token(client)
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    client.post(f"/api/admin/inscricoes/{inscricao_id}/aprovar", headers=headers)
+
+    resp = client.get(
+        "/api/admin/inscricoes/exportar", params={"status_filtro": "aprovado"}, headers=headers
+    )
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert resp.content.startswith(b"PK")  # arquivo .xlsx e um zip
+
+    from openpyxl import load_workbook
+
+    wb = load_workbook(io.BytesIO(resp.content))
+    ws = wb.active
+    valores = [cell.value for row in ws.iter_rows() for cell in row]
+    assert "Servidor de Teste" in valores
+    assert "planilha@example.com" in valores
+
+
 def test_criar_inscricao_com_arquivo_nao_suportado_retorna_400(client):
     unidades = client.get("/api/unidades").json()
     anexos = client.get("/api/anexos").json()

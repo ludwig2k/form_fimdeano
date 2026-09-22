@@ -18,7 +18,7 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
       <section>
-        <div class="flex gap-2 mb-4 flex-wrap">
+        <div class="flex gap-2 mb-4 flex-wrap items-center">
           <button
             v-for="f in filtros"
             :key="f.value"
@@ -27,6 +27,13 @@
             @click="mudarFiltro(f.value)"
           >
             {{ f.label }}
+          </button>
+          <button
+            class="ml-auto px-4 py-1.5 rounded-full text-sm font-semibold bg-confra-green text-white flex items-center gap-1.5 disabled:opacity-60"
+            :disabled="exportando"
+            @click="exportarPlanilha"
+          >
+            📊 {{ exportando ? 'Gerando...' : `Baixar Excel (${filtroLabelAtual})` }}
           </button>
         </div>
 
@@ -161,6 +168,7 @@ const rejeicaoAlvo = ref(null)
 const motivoRejeicao = ref('')
 const mensagem = ref(null)
 const confirmacaoAlvo = ref(null)
+const exportando = ref(false)
 let mensagemTimeout = null
 
 const tituloConfirmacao = computed(() =>
@@ -171,6 +179,7 @@ const mensagemConfirmacao = computed(() =>
     ? 'Tem certeza que deseja excluir esta inscrição? Essa ação não pode ser desfeita.'
     : 'Um e-mail com o QR Code de entrada será enviado ao servidor. Deseja continuar?'
 )
+const filtroLabelAtual = computed(() => filtros.find((f) => f.value === filtroAtual.value)?.label || 'Todas')
 
 function avisar(tipo, texto) {
   mensagem.value = { tipo, texto }
@@ -196,6 +205,26 @@ async function carregar() {
 function mudarFiltro(valor) {
   filtroAtual.value = valor
   carregar()
+}
+
+async function exportarPlanilha() {
+  exportando.value = true
+  try {
+    const params = filtroAtual.value ? { status_filtro: filtroAtual.value } : {}
+    const resp = await client.get('/admin/inscricoes/exportar', { params, responseType: 'blob' })
+    const url = URL.createObjectURL(resp.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `inscricoes_${filtroAtual.value || 'todas'}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    avisar('erro', mensagemErro(e, 'Não foi possível gerar a planilha.'))
+  } finally {
+    exportando.value = false
+  }
 }
 
 async function verComprovante(id) {

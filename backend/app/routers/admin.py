@@ -1,7 +1,7 @@
 import traceback
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -9,7 +9,7 @@ from .. import models, schemas
 from ..config import settings
 from ..database import get_db
 from ..security import create_access_token, require_admin, verify_password
-from ..services import email_service, qrcode_service, storage_service
+from ..services import email_service, export_service, qrcode_service, storage_service
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[])
 
@@ -35,6 +35,26 @@ def listar_inscricoes(
     if status_filtro:
         query = query.filter_by(status=status_filtro)
     return query.order_by(models.Inscricao.created_at.desc()).all()
+
+
+@router.get("/inscricoes/exportar")
+def exportar_inscricoes(
+    status_filtro: models.InscricaoStatus | None = None,
+    db: Session = Depends(get_db),
+    _: str = Depends(require_admin),
+):
+    query = db.query(models.Inscricao)
+    if status_filtro:
+        query = query.filter_by(status=status_filtro)
+    inscricoes = query.order_by(models.Inscricao.created_at.desc()).all()
+
+    conteudo = export_service.gerar_planilha_inscricoes(inscricoes)
+    nome_arquivo = f"inscricoes_{status_filtro.value if status_filtro else 'todas'}.xlsx"
+    return Response(
+        content=conteudo,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{nome_arquivo}"'},
+    )
 
 
 @router.get("/inscricoes/{inscricao_id}/comprovante")
