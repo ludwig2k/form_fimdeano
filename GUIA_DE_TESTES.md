@@ -86,6 +86,11 @@ Peça a quem configurou o ambiente as credenciais de `admin` e `checkin`
    de inscrição (`/`). Desative um item e confirme que ele some das opções
    do formulário (mas inscrições antigas que já usavam ele continuam
    normais).
+9. **Exportar Excel**: no admin, com o filtro "Aprovadas" selecionado,
+   clique em "Baixar Excel" e confirme que o arquivo baixado abre no Excel
+   com as inscrições aprovadas (nome, CPF, e-mail, unidade, anexo, status,
+   data da inscrição e do check-in). Troque o filtro para "Todas" e exporte
+   de novo para conferir que reflete a lista filtrada.
 
 ## Referência rápida da API
 
@@ -102,6 +107,7 @@ Todas as rotas começam com `/api`. As de admin/check-in exigem um token
 | POST | `/api/inscricoes/reenvio/{token}` | Público | Reenvia o comprovante e volta a inscrição para pendente |
 | POST | `/api/admin/login` | Admin | Login, retorna token |
 | GET | `/api/admin/inscricoes` | Admin | Lista inscrições (filtro opcional por status) |
+| GET | `/api/admin/inscricoes/exportar` | Admin | Baixa planilha `.xlsx` das inscrições (mesmo filtro de status) |
 | GET | `/api/admin/inscricoes/{id}/comprovante` | Admin | Baixa/visualiza o arquivo do comprovante |
 | POST | `/api/admin/inscricoes/{id}/aprovar` | Admin | Aprova e dispara e-mail com QR Code |
 | POST | `/api/admin/inscricoes/{id}/rejeitar` | Admin | Rejeita (com motivo) e dispara e-mail com link de reenvio |
