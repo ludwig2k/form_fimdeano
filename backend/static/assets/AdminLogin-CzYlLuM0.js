@@ -1,1 +1,0 @@
-import{_ as a}from"./StaffLoginForm-CMMo9UDL.js";import{x as i,a as o}from"./index-BH8IWtgm.js";import"./client-C6or_lGH.js";const _={__name:"AdminLogin",setup(n){return(r,t)=>(o(),i(a,{titulo:"Painel Administrativo","login-path":"/admin/login",role:"admin","redirect-name":"admin-dashboard"}))}};export{_ as default};
