@@ -66,9 +66,6 @@
         <div class="w-48 h-48 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-sm">
           QR Code PIX
         </div>
-        <p class="text-xs text-gray-400 mt-3">
-          * Substitua pela imagem real do QR Code PIX fornecido pela SEAD.
-        </p>
       </div>
     </section>
 
