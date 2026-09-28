@@ -35,29 +35,16 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-semibold text-confra-green mb-1">Unidade de lotação *</label>
-        <select
-          v-model="form.unidade_id"
-          required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-confra-red"
-        >
-          <option disabled value="">Selecione...</option>
-          <option v-for="u in unidades" :key="u.id" :value="u.id">{{ u.nome }}</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-confra-green mb-1">Anexo de lotação *</label>
-        <select
-          v-model="form.anexo_id"
-          required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-confra-red"
-        >
-          <option disabled value="">Selecione...</option>
-          <option v-for="a in anexos" :key="a.id" :value="a.id">{{ a.nome }}</option>
-        </select>
-      </div>
+    <div>
+      <label class="block text-sm font-semibold text-confra-green mb-1">Anexo de lotação *</label>
+      <select
+        v-model="form.anexo_id"
+        required
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-confra-red"
+      >
+        <option disabled value="">Selecione...</option>
+        <option v-for="a in anexos" :key="a.id" :value="a.id">{{ a.nome }}</option>
+      </select>
     </div>
 
     <div>
@@ -91,7 +78,6 @@ import client from '../api/client'
 
 const router = useRouter()
 
-const unidades = ref([])
 const anexos = ref([])
 const cpfDisplay = ref('')
 const erro = ref('')
@@ -102,14 +88,12 @@ const form = reactive({
   nome_completo: '',
   cpf: '',
   email: '',
-  unidade_id: '',
   anexo_id: '',
 })
 
 onMounted(async () => {
-  const [uRes, aRes] = await Promise.all([client.get('/unidades'), client.get('/anexos')])
-  unidades.value = uRes.data
-  anexos.value = aRes.data
+  const resp = await client.get('/anexos')
+  anexos.value = resp.data
 })
 
 function onCpfInput(event) {
@@ -137,7 +121,6 @@ async function enviar() {
     data.append('nome_completo', form.nome_completo)
     data.append('cpf', form.cpf)
     data.append('email', form.email)
-    data.append('unidade_id', form.unidade_id)
     data.append('anexo_id', form.anexo_id)
     data.append('comprovante', arquivo.value)
 

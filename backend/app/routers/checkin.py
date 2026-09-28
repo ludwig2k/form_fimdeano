@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
+from ..cpf import only_digits
 from ..database import get_db
 from ..security import create_access_token, require_checkin, verify_password
 
@@ -22,22 +23,33 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return schemas.TokenResponse(access_token=token, role=user.role.value)
 
 
+def _buscar_inscricao(db: Session, codigo: str) -> models.Inscricao | None:
+    codigo = codigo.strip()
+    inscricao = db.query(models.Inscricao).filter_by(qr_token=codigo).first()
+    if inscricao:
+        return inscricao
+
+    cpf = only_digits(codigo)
+    if len(cpf) == 11:
+        return db.query(models.Inscricao).filter_by(cpf=cpf).first()
+    return None
+
+
 @router.post("/validar", response_model=schemas.CheckinValidarResponse)
 def validar_checkin(
     payload: schemas.CheckinValidarRequest,
     db: Session = Depends(get_db),
     _: str = Depends(require_checkin),
 ):
-    inscricao = db.query(models.Inscricao).filter_by(qr_token=payload.qr_token).first()
+    inscricao = _buscar_inscricao(db, payload.qr_token)
     if not inscricao or inscricao.status != models.InscricaoStatus.aprovado:
-        return schemas.CheckinValidarResponse(ok=False, mensagem="QR Code inválido ou inscrição não aprovada.")
+        return schemas.CheckinValidarResponse(ok=False, mensagem="Código inválido ou inscrição não aprovada.")
 
     if inscricao.checked_in_at is not None:
         return schemas.CheckinValidarResponse(
             ok=False,
-            mensagem="Este QR Code já foi utilizado.",
+            mensagem="Este código já foi utilizado.",
             nome_completo=inscricao.nome_completo,
-            unidade=inscricao.unidade.nome,
             anexo=inscricao.anexo.nome,
             ja_utilizado=True,
             checked_in_at=inscricao.checked_in_at,
@@ -51,7 +63,6 @@ def validar_checkin(
         ok=True,
         mensagem="Check-in realizado com sucesso!",
         nome_completo=inscricao.nome_completo,
-        unidade=inscricao.unidade.nome,
         anexo=inscricao.anexo.nome,
         checked_in_at=inscricao.checked_in_at,
     )

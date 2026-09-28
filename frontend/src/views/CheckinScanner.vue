@@ -28,7 +28,7 @@
         <input
           v-model="codigoManual"
           type="text"
-          placeholder="Colar/digitar o código do QR Code"
+          placeholder="CPF do servidor ou código do QR Code"
           class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
         <button class="bg-confra-green text-white px-3 py-2 rounded-lg text-sm font-semibold">Validar</button>
@@ -40,7 +40,6 @@
           :ok="resultado.ok"
           :mensagem="resultado.mensagem"
           :nome-completo="resultado.nome_completo"
-          :unidade="resultado.unidade"
           :anexo="resultado.anexo"
           @fechar="continuarEscaneando"
         />

@@ -22,14 +22,6 @@ class InscricaoStatus(str, enum.Enum):
     rejeitado = "rejeitado"
 
 
-class Unidade(Base):
-    __tablename__ = "unidades"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    nome: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
-    ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
-
 class Anexo(Base):
     __tablename__ = "anexos"
 
@@ -55,9 +47,7 @@ class Inscricao(Base):
     cpf: Mapped[str] = mapped_column(String(11), unique=True, nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    unidade_id: Mapped[int] = mapped_column(ForeignKey("unidades.id"), nullable=False)
     anexo_id: Mapped[int] = mapped_column(ForeignKey("anexos.id"), nullable=False)
-    unidade: Mapped["Unidade"] = relationship()
     anexo: Mapped["Anexo"] = relationship()
 
     comprovante_path: Mapped[str] = mapped_column(String(500), nullable=False)

@@ -6,18 +6,6 @@ from .cpf import is_valid_cpf, mask_cpf, only_digits
 from .models import InscricaoStatus
 
 
-class UnidadeOut(BaseModel):
-    id: int
-    nome: str
-    ativo: bool
-
-    model_config = {"from_attributes": True}
-
-
-class UnidadeIn(BaseModel):
-    nome: str = Field(min_length=2, max_length=200)
-
-
 class AnexoOut(BaseModel):
     id: int
     nome: str
@@ -34,7 +22,6 @@ class InscricaoCreate(BaseModel):
     nome_completo: str = Field(min_length=3, max_length=200)
     cpf: str
     email: EmailStr
-    unidade_id: int
     anexo_id: int
 
     @field_validator("cpf")
@@ -58,7 +45,6 @@ class InscricaoAdminOut(BaseModel):
     nome_completo: str
     cpf: str
     email: str
-    unidade: UnidadeOut
     anexo: AnexoOut
     status: InscricaoStatus
     motivo_rejeicao: str | None
@@ -91,14 +77,13 @@ class TokenResponse(BaseModel):
 
 
 class CheckinValidarRequest(BaseModel):
-    qr_token: str
+    qr_token: str = Field(description="Token do QR Code ou o CPF do servidor")
 
 
 class CheckinValidarResponse(BaseModel):
     ok: bool
     mensagem: str
     nome_completo: str | None = None
-    unidade: str | None = None
     anexo: str | None = None
     ja_utilizado: bool = False
     checked_in_at: datetime | None = None

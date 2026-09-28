@@ -82,6 +82,6 @@ QR Code).
   `confra`). Troque textos, cores e a lista de atrações pelas informações reais
   do evento, e substitua o bloco "QR Code PIX" pela imagem real fornecida pela
   SEAD.
-- **Unidades e Anexos de lotação**: gerenciados pela própria tela de admin
-  (`/admin`, seção "Gerenciar unidades e anexos de lotação"). Os valores em
+- **Anexos de lotação**: gerenciados pela própria tela de admin (`/admin`,
+  seção "Gerenciar anexos de lotação"). Os valores em
   [seed.py](backend/app/seed.py) são apenas para o banco não começar vazio.

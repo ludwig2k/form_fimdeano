@@ -5,7 +5,7 @@
       <p class="font-bold text-xl text-confra-green">{{ mensagem }}</p>
       <template v-if="nomeCompleto">
         <p class="mt-3 text-lg">{{ nomeCompleto }}</p>
-        <p class="text-sm text-gray-500">{{ unidade }} — {{ anexo }}</p>
+        <p class="text-sm text-gray-500">{{ anexo }}</p>
       </template>
       <button
         class="mt-6 w-full bg-confra-green text-white font-semibold rounded-lg py-3"
@@ -24,7 +24,6 @@ const props = defineProps({
   ok: { type: Boolean, required: true },
   mensagem: { type: String, required: true },
   nomeCompleto: { type: String, default: null },
-  unidade: { type: String, default: null },
   anexo: { type: String, default: null },
 })
 defineEmits(['fechar'])

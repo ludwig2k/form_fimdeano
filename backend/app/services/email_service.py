@@ -33,7 +33,7 @@ def _send(to_email: str, subject: str, html_body: str, inline_images: dict[str, 
         server.sendmail(settings.email_from, [to_email], msg.as_string())
 
 
-def send_aprovacao_email(to_email: str, nome_completo: str, qr_token: str, qr_png_bytes: bytes) -> None:
+def send_aprovacao_email(to_email: str, nome_completo: str, cpf_formatado: str, qr_png_bytes: bytes) -> None:
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
       <h2 style="color:#8b1d24;">Inscrição confirmada!</h2>
@@ -42,12 +42,13 @@ def send_aprovacao_email(to_email: str, nome_completo: str, qr_token: str, qr_pn
       foi aprovada. Apresente o QR Code abaixo na entrada do evento:</p>
       <p style="text-align:center;"><img src="cid:qrcode" alt="QR Code de entrada" width="220" height="220" /></p>
       <p style="text-align:center; font-size:12px; color:#666;">
-        Se a leitura do QR Code não funcionar na entrada, informe este código para a equipe:<br/>
-        <code style="font-size:14px; background:#f5f5f5; padding:4px 8px; border-radius:4px; display:inline-block; margin-top:4px;">{qr_token}</code>
+        Se a leitura do QR Code não funcionar na entrada, informe seu CPF para a equipe:<br/>
+        <code style="font-size:14px; background:#f5f5f5; padding:4px 8px; border-radius:4px; display:inline-block; margin-top:4px;">{cpf_formatado}</code>
       </p>
       <p><strong>Data:</strong> 18/12/2026 (sexta-feira), das 16h às 22h<br/>
       <strong>Local:</strong> Salão de Eventos da ASMEGO — Rua 72 esquina com a BR-153,
-      Jardim Goiás, Goiânia-GO</p>
+      Jardim Goiás, Goiânia-GO<br/>
+      <span style="color:#8b1d24;">⚠️ Não haverá estacionamento no local.</span></p>
       <p>Nos vemos lá!</p>
     </div>
     """

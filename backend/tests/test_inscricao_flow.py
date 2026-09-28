@@ -23,21 +23,18 @@ def _checkin_token(client):
 
 
 def _submit_inscricao(client, cpf=VALID_CPF, email="servidor@example.com"):
-    unidades = client.get("/api/unidades").json()
     anexos = client.get("/api/anexos").json()
     files = {"comprovante": ("comprovante.png", io.BytesIO(PNG_BYTES), "image/png")}
     data = {
         "nome_completo": "Servidor de Teste",
         "cpf": cpf,
         "email": email,
-        "unidade_id": str(unidades[0]["id"]),
         "anexo_id": str(anexos[0]["id"]),
     }
     return client.post("/api/inscricoes", data=data, files=files)
 
 
 def test_seed_data_available(client):
-    assert client.get("/api/unidades").json()
     assert client.get("/api/anexos").json()
 
 
@@ -91,14 +88,12 @@ def test_exportar_planilha_de_aprovados(client):
 
 
 def test_criar_inscricao_com_arquivo_nao_suportado_retorna_400(client):
-    unidades = client.get("/api/unidades").json()
     anexos = client.get("/api/anexos").json()
     files = {"comprovante": ("comprovante.txt", io.BytesIO(b"nao e imagem nem pdf"), "text/plain")}
     data = {
         "nome_completo": "Servidor Invalido",
         "cpf": "529.982.247-25",
         "email": "arquivo@example.com",
-        "unidade_id": str(unidades[0]["id"]),
         "anexo_id": str(anexos[0]["id"]),
     }
     resp = client.post("/api/inscricoes", data=data, files=files)
@@ -161,3 +156,28 @@ def test_fluxo_completo_rejeicao_reenvio_aprovacao_checkin(client, db_session):
     assert segundo_checkin.status_code == 200
     assert segundo_checkin.json()["ok"] is False
     assert segundo_checkin.json()["ja_utilizado"] is True
+
+
+def test_checkin_tambem_aceita_cpf_como_codigo(client):
+    resp = _submit_inscricao(client, cpf="135.792.468-28", email="checkincpf@example.com")
+    inscricao_id = resp.json()["id"]
+
+    admin_token = _admin_token(client)
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    client.post(f"/api/admin/inscricoes/{inscricao_id}/aprovar", headers=headers)
+
+    checkin_token = _checkin_token(client)
+    checkin_headers = {"Authorization": f"Bearer {checkin_token}"}
+
+    checkin_por_cpf = client.post(
+        "/api/checkin/validar", json={"qr_token": "135.792.468-28"}, headers=checkin_headers
+    )
+    assert checkin_por_cpf.status_code == 200
+    assert checkin_por_cpf.json()["ok"] is True
+    assert checkin_por_cpf.json()["nome_completo"] == "Servidor de Teste"
+
+    reuso = client.post(
+        "/api/checkin/validar", json={"qr_token": "13579246828"}, headers=checkin_headers
+    )
+    assert reuso.status_code == 200
+    assert reuso.json()["ja_utilizado"] is True

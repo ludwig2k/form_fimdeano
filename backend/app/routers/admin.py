@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..config import settings
+from ..cpf import format_cpf
 from ..database import get_db
 from ..security import create_access_token, require_admin, verify_password
 from ..services import email_service, export_service, qrcode_service, storage_service
@@ -94,7 +95,9 @@ def aprovar_inscricao(inscricao_id: int, db: Session = Depends(get_db), _: str =
     email_enviado = True
     try:
         qr_bytes = qrcode_service.generate_qr_png_bytes(inscricao.qr_token)
-        email_service.send_aprovacao_email(inscricao.email, inscricao.nome_completo, inscricao.qr_token, qr_bytes)
+        email_service.send_aprovacao_email(
+            inscricao.email, inscricao.nome_completo, format_cpf(inscricao.cpf), qr_bytes
+        )
     except Exception:
         email_enviado = False
         print(f"[admin] Falha ao enviar e-mail de aprovacao para {inscricao.email}:")
@@ -133,33 +136,6 @@ def rejeitar_inscricao(
     resultado = schemas.InscricaoAdminOut.model_validate(inscricao)
     resultado.email_enviado = email_enviado
     return resultado
-
-
-@router.get("/unidades", response_model=list[schemas.UnidadeOut])
-def listar_unidades_admin(db: Session = Depends(get_db), _: str = Depends(require_admin)):
-    return db.query(models.Unidade).order_by(models.Unidade.nome).all()
-
-
-@router.post("/unidades", response_model=schemas.UnidadeOut, status_code=status.HTTP_201_CREATED)
-def criar_unidade(payload: schemas.UnidadeIn, db: Session = Depends(get_db), _: str = Depends(require_admin)):
-    unidade = models.Unidade(nome=payload.nome)
-    db.add(unidade)
-    db.commit()
-    db.refresh(unidade)
-    return unidade
-
-
-@router.patch("/unidades/{unidade_id}/ativo", response_model=schemas.UnidadeOut)
-def alternar_unidade(
-    unidade_id: int, ativo: bool, db: Session = Depends(get_db), _: str = Depends(require_admin)
-):
-    unidade = db.get(models.Unidade, unidade_id)
-    if not unidade:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unidade não encontrada.")
-    unidade.ativo = ativo
-    db.commit()
-    db.refresh(unidade)
-    return unidade
 
 
 @router.get("/anexos", response_model=list[schemas.AnexoOut])

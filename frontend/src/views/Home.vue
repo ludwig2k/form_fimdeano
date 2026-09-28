@@ -7,7 +7,8 @@
         <p class="text-lg sm:text-xl text-white/90">
           18 de dezembro de 2026 (sexta-feira) • 16h às 22h
         </p>
-        <p class="text-white/90 mb-6">Salão de Eventos ASMEGO — Rua 72 c/ BR-153, Jardim Goiás, Goiânia-GO</p>
+        <p class="text-white/90">Salão de Eventos ASMEGO — Rua 72 c/ BR-153, Jardim Goiás, Goiânia-GO</p>
+        <p class="text-sm text-white/80 mb-6">⚠️ Não haverá estacionamento no local.</p>
         <p class="max-w-2xl mx-auto text-white/95 leading-relaxed">
           Depois de mais um ano de muito trabalho, chegou a hora de comemorar nossas conquistas:
           encontro com colegas e amigos, chopp gelado, comida saborosa e muito pagode no pé!

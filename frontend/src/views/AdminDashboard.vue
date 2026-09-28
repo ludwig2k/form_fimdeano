@@ -46,7 +46,7 @@
               <div>
                 <p class="font-semibold text-confra-green">{{ i.nome_completo }}</p>
                 <p class="text-sm text-gray-500">CPF {{ i.cpf }} • {{ i.email }}</p>
-                <p class="text-sm text-gray-500">{{ i.unidade.nome }} — {{ i.anexo.nome }}</p>
+                <p class="text-sm text-gray-500">{{ i.anexo.nome }}</p>
               </div>
               <span
                 class="text-xs font-semibold px-2 py-1 rounded-full h-fit"
@@ -96,11 +96,10 @@
 
       <section class="bg-white rounded-xl shadow p-4">
         <button class="font-semibold text-confra-green" @click="mostrarCatalogo = !mostrarCatalogo">
-          {{ mostrarCatalogo ? '▾' : '▸' }} Gerenciar unidades e anexos de lotação
+          {{ mostrarCatalogo ? '▾' : '▸' }} Gerenciar anexos de lotação
         </button>
 
-        <div v-if="mostrarCatalogo" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-          <CatalogoManager titulo="Unidades" resource="unidades" />
+        <div v-if="mostrarCatalogo" class="max-w-sm mt-4">
           <CatalogoManager titulo="Anexos" resource="anexos" />
         </div>
       </section>

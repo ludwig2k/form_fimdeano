@@ -1,14 +1,8 @@
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .models import Anexo, StaffRole, StaffUser, Unidade
+from .models import Anexo, StaffRole, StaffUser
 from .security import hash_password
-
-DEFAULT_UNIDADES = [
-    "Gabinete",
-    "Gerência de Gestão e Desenvolvimento de Pessoas",
-    "Superintendência de Administração",
-]
 
 DEFAULT_ANEXOS = [
     "Anexo I",
@@ -37,8 +31,6 @@ def seed_staff_users(db: Session) -> None:
 
 
 def seed_reference_data(db: Session) -> None:
-    if db.query(Unidade).count() == 0:
-        db.add_all(Unidade(nome=nome) for nome in DEFAULT_UNIDADES)
     if db.query(Anexo).count() == 0:
         db.add_all(Anexo(nome=nome) for nome in DEFAULT_ANEXOS)
     db.commit()

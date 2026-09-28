@@ -10,11 +10,6 @@ from ..services import qrcode_service, storage_service
 router = APIRouter(prefix="/api", tags=["public"])
 
 
-@router.get("/unidades", response_model=list[schemas.UnidadeOut])
-def listar_unidades(db: Session = Depends(get_db)):
-    return db.query(models.Unidade).filter_by(ativo=True).order_by(models.Unidade.nome).all()
-
-
 @router.get("/anexos", response_model=list[schemas.AnexoOut])
 def listar_anexos(db: Session = Depends(get_db)):
     return db.query(models.Anexo).filter_by(ativo=True).order_by(models.Anexo.nome).all()
@@ -25,21 +20,18 @@ async def criar_inscricao(
     nome_completo: str = Form(...),
     cpf: str = Form(...),
     email: str = Form(...),
-    unidade_id: int = Form(...),
     anexo_id: int = Form(...),
     comprovante: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
     try:
         dados = schemas.InscricaoCreate(
-            nome_completo=nome_completo, cpf=cpf, email=email, unidade_id=unidade_id, anexo_id=anexo_id
+            nome_completo=nome_completo, cpf=cpf, email=email, anexo_id=anexo_id
         )
     except ValidationError as exc:
         mensagens = [erro["msg"] for erro in exc.errors()]
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=mensagens)
 
-    if not db.query(models.Unidade).filter_by(id=dados.unidade_id, ativo=True).first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unidade de lotação inválida.")
     if not db.query(models.Anexo).filter_by(id=dados.anexo_id, ativo=True).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Anexo de lotação inválido.")
 
@@ -55,7 +47,6 @@ async def criar_inscricao(
         nome_completo=dados.nome_completo,
         cpf=dados.cpf,
         email=dados.email,
-        unidade_id=dados.unidade_id,
         anexo_id=dados.anexo_id,
         comprovante_path=comprovante_path,
         comprovante_mime=comprovante_mime,
