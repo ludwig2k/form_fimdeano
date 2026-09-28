@@ -73,8 +73,9 @@ Preencha com valores reais e definitivos:
 - `PUBLIC_BASE_URL`: o domínio final com `https://`, ex.
   `https://confra.seudominio.com.br` (usado no link de reenvio de comprovante
   enviado por e-mail e liberado no CORS).
-- `SMTP_*`: já usamos as credenciais reais da SEAD (`mail.goias.gov.br`).
-- `EVENTO_VALOR_INSCRICAO`: valor exibido na página.
+- `SMTP_*`: já usamos a conta institucional do Gmail (`ggdpdasead@gmail.com`,
+  mesma do `form_doacao`) — o SMTP interno da SEAD não é alcançável de fora
+  da rede do governo.
 
 **Importante:** se você já rodou a aplicação localmente com um `SECRET_KEY` de
 teste, gere um novo para produção — ele assina os tokens de login e os links

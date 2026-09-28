@@ -20,8 +20,6 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
     email_from: str = "confraternizacao@sead.go.gov.br"
 
-    evento_valor_inscricao: str = "0,00"
-
     access_token_expire_minutes: int = 480
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
