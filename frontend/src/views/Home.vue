@@ -5,7 +5,13 @@
       class="fixed inset-0 z-0 bg-cover bg-center pointer-events-none"
       :style="{ backgroundImage: `url(${fundoHome})` }"
       aria-hidden="true"
-    ></div>
+    >
+      <!-- Faixa central bege: colagem colorida só nas laterais, conteúdo sobre fundo neutro -->
+      <div
+        class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-full max-w-[70rem]"
+        style="background: linear-gradient(to right, transparent, #fdf8ef 2.5rem, #fdf8ef calc(100% - 2.5rem), transparent)"
+      ></div>
+    </div>
 
     <div class="relative">
     <header class="text-white px-4 pt-10 sm:pt-16">
@@ -18,7 +24,7 @@
         <p class="text-white/90 mb-6">Salão de Eventos ASMEGO — Rua 72 c/ BR-153, Jardim Goiás, Goiânia-GO</p>
         <p class="max-w-2xl mx-auto text-white/95 leading-relaxed">
           Depois de mais um ano de muito trabalho, chegou a hora de comemorar nossas conquistas:
-          encontro com colegas e amigos, chopp gelado, comida saborosa e muito pagode no pé!
+          encontro com colegas e amigos, chopp gelado, comida saborosa e muita música boa!
           Uma tardezinha e noite pensadas pra gente celebrar quem faz a SEAD acontecer:
           <strong>você</strong>.
         </p>
@@ -32,15 +38,11 @@
           <p class="font-bold text-confra-green">{{ destaque.texto }}</p>
         </div>
       </div>
-      <p class="text-center text-gray-700 mt-6 max-w-2xl mx-auto bg-white/90 rounded-xl shadow px-4 py-3">
-        Teremos <strong>duas bandas de pagode</strong> e uma <strong>atração surpresa</strong>
-        para animar nossa festa!
-      </p>
     </section>
 
     <section class="max-w-3xl mx-auto px-4 py-8">
       <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-        <h2 class="text-xl font-bold text-confra-green mb-4 text-center">Valores da inscrição</h2>
+        <h2 class="text-xl font-bold text-confra-green mb-4 text-center">Valores da contribuição</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
             class="rounded-xl border-2 p-4 text-center"
@@ -48,7 +50,6 @@
           >
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">1º lote</p>
             <p class="text-2xl font-extrabold text-confra-green my-1">R$ 30,00</p>
-            <p class="text-sm text-gray-500">até 06/11/2026</p>
             <p v-if="loteAtivo === 1" class="text-xs font-bold text-confra-red mt-2">VALOR ATUAL</p>
           </div>
           <div
@@ -57,7 +58,6 @@
           >
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">2º lote</p>
             <p class="text-2xl font-extrabold text-confra-green my-1">R$ 40,00</p>
-            <p class="text-sm text-gray-500">após 06/11/2026</p>
             <p v-if="loteAtivo === 2" class="text-xs font-bold text-confra-red mt-2">VALOR ATUAL</p>
           </div>
         </div>
@@ -66,7 +66,7 @@
 
     <section class="max-w-3xl mx-auto px-4 py-8">
       <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center">
-        <h2 class="text-xl font-bold text-confra-green mb-2">Pagamento da inscrição</h2>
+        <h2 class="text-xl font-bold text-confra-green mb-2">Pagamento da contribuição</h2>
         <p class="text-gray-600 mb-4">
           Valor atual: <strong>R$ {{ loteAtivo === 1 ? '30,00' : '40,00' }}</strong>
         </p>
