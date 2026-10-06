@@ -1,7 +1,15 @@
 <template>
-  <div class="min-h-screen bg-confra-cream">
-    <header class="bg-gradient-to-br from-confra-green via-confra-red to-confra-gold text-white">
-      <div class="max-w-5xl mx-auto px-4 py-16 text-center">
+  <div class="relative min-h-screen bg-confra-cream">
+    <!-- Fundo fixo em div própria (background-attachment: fixed não funciona no iOS) -->
+    <div
+      class="fixed inset-0 z-0 bg-cover bg-center pointer-events-none"
+      :style="{ backgroundImage: `url(${fundoHome})` }"
+      aria-hidden="true"
+    ></div>
+
+    <div class="relative">
+    <header class="text-white px-4 pt-10 sm:pt-16">
+      <div class="max-w-4xl mx-auto px-6 py-10 sm:py-12 text-center rounded-3xl bg-confra-green/90 shadow-2xl backdrop-blur-sm">
         <p class="uppercase tracking-widest text-sm text-white/80 mb-2">SEAD • Gerência de Gestão e Desenvolvimento de Pessoas</p>
         <h1 class="text-4xl sm:text-5xl font-extrabold mb-4">Confraternização de Fim de Ano</h1>
         <p class="text-lg sm:text-xl text-white/90">
@@ -24,7 +32,7 @@
           <p class="font-bold text-confra-green">{{ destaque.texto }}</p>
         </div>
       </div>
-      <p class="text-center text-gray-600 mt-6 max-w-2xl mx-auto">
+      <p class="text-center text-gray-700 mt-6 max-w-2xl mx-auto bg-white/90 rounded-xl shadow px-4 py-3">
         Teremos <strong>duas bandas de pagode</strong> e uma <strong>atração surpresa</strong>
         para animar nossa festa!
       </p>
@@ -62,22 +70,28 @@
         <p class="text-gray-600 mb-4">
           Valor atual: <strong>R$ {{ loteAtivo === 1 ? '30,00' : '40,00' }}</strong>
         </p>
-        <div class="w-48 h-48 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-          QR Code PIX
-        </div>
+        <img
+          :src="pixQrCode"
+          alt="QR Code PIX para pagamento da inscrição"
+          class="w-56 h-56 mx-auto rounded-lg border border-gray-200 p-2 bg-white"
+        />
+        <p class="text-sm text-gray-500 mt-3">Escaneie o QR Code no app do seu banco.</p>
       </div>
     </section>
 
     <section id="inscricao" class="max-w-3xl mx-auto px-4 py-8 pb-16">
-      <h2 class="text-2xl font-bold text-confra-green mb-6 text-center">Formulário de Inscrição</h2>
+      <h2 class="text-2xl font-bold text-white mb-6 text-center bg-confra-green/90 rounded-xl shadow py-3">Formulário de Inscrição</h2>
       <InscricaoForm />
     </section>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import InscricaoForm from '../components/InscricaoForm.vue'
+import fundoHome from '../assets/fundo-home.jpg'
+import pixQrCode from '../assets/pix-qrcode.png'
 
 const destaques = [
   { emoji: '🍻', texto: 'Open bar e Open food!' },
