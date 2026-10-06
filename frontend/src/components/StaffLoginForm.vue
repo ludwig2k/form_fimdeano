@@ -2,6 +2,9 @@
   <div class="min-h-screen bg-confra-cream flex items-center justify-center px-4">
     <form class="max-w-sm w-full bg-white rounded-2xl shadow-xl p-8 space-y-4" @submit.prevent="entrar">
       <h1 class="text-xl font-bold text-confra-green text-center mb-2">{{ titulo }}</h1>
+      <p v-if="sessaoExpirada" class="text-sm text-yellow-800 bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2">
+        Sua sessão expirou. Entre novamente.
+      </p>
       <div>
         <label class="block text-sm font-semibold text-confra-green mb-1">Usuário</label>
         <input v-model="username" required class="w-full rounded-lg border border-gray-300 px-3 py-2" />
@@ -24,7 +27,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import client from '../api/client'
 
@@ -36,6 +39,8 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const route = useRoute()
+const sessaoExpirada = route.query.expirada === '1'
 const auth = useAuthStore()
 
 const username = ref('')

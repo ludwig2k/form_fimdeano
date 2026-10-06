@@ -26,15 +26,49 @@ const router = createRouter({
   routes,
 })
 
+const LOGIN_POR_ROLE = { admin: 'admin-login', checkin: 'checkin-login' }
+
+// Desloga e manda para o login certo, com aviso de sessão expirada.
+export function encerrarSessaoExpirada() {
+  const auth = useAuthStore()
+  const role = router.currentRoute.value.meta.requiresRole || auth.role
+  auth.logout()
+  if (LOGIN_POR_ROLE[role]) {
+    router.replace({ name: LOGIN_POR_ROLE[role], query: { expirada: '1' } })
+  }
+}
+
 router.beforeEach((to) => {
   const requiredRole = to.meta.requiresRole
   if (!requiredRole) return true
 
   const auth = useAuthStore()
-  if (auth.role !== requiredRole || !auth.token) {
-    return { name: requiredRole === 'admin' ? 'admin-login' : 'checkin-login' }
+  if (!auth.sessaoValida(requiredRole)) {
+    const expirou = !!auth.token
+    auth.logout()
+    return { name: LOGIN_POR_ROLE[requiredRole], query: expirou ? { expirada: '1' } : {} }
   }
   return true
+})
+
+// Logoff automático: agenda para o instante em que o token vence e também
+// confere ao voltar para a aba (timers de abas em segundo plano atrasam).
+let timerExpiracao = null
+function agendarExpiracao() {
+  clearTimeout(timerExpiracao)
+  const role = router.currentRoute.value.meta.requiresRole
+  if (!role) return
+  const auth = useAuthStore()
+  if (!auth.sessaoValida(role)) {
+    encerrarSessaoExpirada()
+    return
+  }
+  timerExpiracao = setTimeout(agendarExpiracao, Math.min(auth.expiraEm - Date.now() + 1000, 2 ** 31 - 1))
+}
+
+router.afterEach(agendarExpiracao)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') agendarExpiracao()
 })
 
 export default router

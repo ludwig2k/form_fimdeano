@@ -196,9 +196,14 @@ function mensagemErro(erro, padrao) {
 async function carregar() {
   carregando.value = true
   const params = filtroAtual.value ? { status_filtro: filtroAtual.value } : {}
-  const resp = await client.get('/admin/inscricoes', { params })
-  inscricoes.value = resp.data
-  carregando.value = false
+  try {
+    const resp = await client.get('/admin/inscricoes', { params })
+    inscricoes.value = resp.data
+  } catch (e) {
+    if (e.response?.status !== 401) avisar('erro', mensagemErro(e, 'Não foi possível carregar as inscrições.'))
+  } finally {
+    carregando.value = false
+  }
 }
 
 function mudarFiltro(valor) {
