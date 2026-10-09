@@ -73,14 +73,49 @@
         <p class="text-gray-600 mb-4">
           Valor atual: <strong>R$ {{ loteAtivo === 1 ? '30,00' : '40,00' }}</strong>
         </p>
-        <img
-          :src="pixQrCode"
-          alt="QR Code PIX para pagamento da inscrição"
-          class="w-56 h-56 mx-auto rounded-lg border border-gray-200 p-2 bg-white"
-        />
+        <button
+          type="button"
+          class="block mx-auto cursor-zoom-in rounded-xl focus:outline-none focus:ring-2 focus:ring-confra-red"
+          aria-label="Ampliar QR Code PIX"
+          @click="pixAmpliado = true"
+        >
+          <img
+            :src="pixQrCode"
+            alt="QR Code PIX para pagamento da inscrição"
+            class="w-56 h-56 rounded-lg border border-gray-200 p-2 bg-white"
+          />
+        </button>
         <p class="text-sm text-gray-500 mt-3">Escaneie o QR Code no app do seu banco.</p>
+        <p class="text-xs text-gray-400 mt-1">Toque na imagem para ampliar.</p>
       </div>
     </section>
+
+    <Transition name="modal">
+      <div
+        v-if="pixAmpliado"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm cursor-zoom-out"
+        role="dialog"
+        aria-modal="true"
+        aria-label="QR Code PIX ampliado"
+        @click="pixAmpliado = false"
+      >
+        <div class="relative">
+          <img
+            :src="pixQrCode"
+            alt="QR Code PIX para pagamento da inscrição"
+            class="w-[min(90vw,90vh,40rem)] h-auto rounded-xl bg-white p-3 shadow-2xl"
+          />
+          <button
+            type="button"
+            class="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-white text-confra-green text-2xl font-bold leading-none shadow-lg hover:bg-gray-100"
+            aria-label="Fechar"
+            @click.stop="pixAmpliado = false"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+    </Transition>
 
     <section id="inscricao" class="max-w-3xl mx-auto px-4 py-8 pb-16">
       <h2 class="text-2xl font-bold text-white mb-6 text-center bg-confra-green/90 rounded-xl shadow py-3">Formulário de Inscrição</h2>
@@ -91,7 +126,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import InscricaoForm from '../components/InscricaoForm.vue'
 import fundoHome from '../assets/fundo-home.jpg'
 import pixQrCode from '../assets/pix-qrcode.png'
@@ -105,4 +140,12 @@ const destaques = [
 // 1º lote até 06/11/2026 (inclusive); 2º lote a partir de 07/11/2026.
 const DATA_CORTE_LOTE = new Date('2026-11-07T00:00:00')
 const loteAtivo = computed(() => (new Date() < DATA_CORTE_LOTE ? 1 : 2))
+
+const pixAmpliado = ref(false)
+
+function fecharComEsc(event) {
+  if (event.key === 'Escape') pixAmpliado.value = false
+}
+onMounted(() => window.addEventListener('keydown', fecharComEsc))
+onBeforeUnmount(() => window.removeEventListener('keydown', fecharComEsc))
 </script>
