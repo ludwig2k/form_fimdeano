@@ -87,6 +87,24 @@
         </button>
         <p class="text-sm text-gray-500 mt-3">Escaneie o QR Code no app do seu banco.</p>
         <p class="text-xs text-gray-400 mt-1">Toque na imagem para ampliar.</p>
+
+        <div class="mt-6 pt-5 border-t border-gray-200">
+          <p class="text-sm text-gray-600 mb-2">Se preferir, copie a chave PIX (e-mail):</p>
+          <div class="flex items-center justify-center gap-2 flex-wrap">
+            <span class="font-mono font-semibold text-confra-green bg-gray-100 rounded-lg px-3 py-2 break-all select-all">
+              {{ CHAVE_PIX }}
+            </span>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg font-semibold text-white transition-colors"
+              :class="chaveCopiada ? 'bg-confra-green' : 'bg-confra-red hover:bg-red-800'"
+              @click="copiarChavePix"
+            >
+              {{ chaveCopiada ? 'Copiado!' : 'Copiar' }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Favorecido: Fernando Dias da Silva</p>
+        </div>
       </div>
     </section>
 
@@ -140,6 +158,29 @@ const destaques = [
 // 1º lote até 06/11/2026 (inclusive); 2º lote a partir de 07/11/2026.
 const DATA_CORTE_LOTE = new Date('2026-11-07T00:00:00')
 const loteAtivo = computed(() => (new Date() < DATA_CORTE_LOTE ? 1 : 2))
+
+const CHAVE_PIX = 'fdds.sgi@gmail.com'
+const chaveCopiada = ref(false)
+let timerCopiada = null
+
+async function copiarChavePix() {
+  try {
+    await navigator.clipboard.writeText(CHAVE_PIX)
+  } catch {
+    // Fallback para navegadores sem Clipboard API (ou fora de HTTPS).
+    const campo = document.createElement('textarea')
+    campo.value = CHAVE_PIX
+    campo.style.position = 'fixed'
+    campo.style.opacity = '0'
+    document.body.appendChild(campo)
+    campo.select()
+    document.execCommand('copy')
+    document.body.removeChild(campo)
+  }
+  chaveCopiada.value = true
+  clearTimeout(timerCopiada)
+  timerCopiada = setTimeout(() => (chaveCopiada.value = false), 2000)
+}
 
 const pixAmpliado = ref(false)
 
