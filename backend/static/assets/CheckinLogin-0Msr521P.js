@@ -1,1 +1,0 @@
-import{_ as e}from"./StaffLoginForm-LLDivK3D.js";import{y as c,a as n}from"./index-RdqEHmwK.js";import"./client-LM-E2zN1.js";const s={__name:"CheckinLogin",setup(o){return(r,t)=>(n(),c(e,{titulo:"Check-in do Evento","login-path":"/checkin/login",role:"checkin","redirect-name":"checkin-scanner"}))}};export{s as default};

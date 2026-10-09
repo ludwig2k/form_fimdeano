@@ -19,7 +19,10 @@
         <p class="uppercase tracking-widest text-sm text-white/80 mb-2">SEAD • Gerência de Gestão e Desenvolvimento de Pessoas</p>
         <h1 class="text-4xl sm:text-5xl font-extrabold mb-4">Confraternização de Fim de Ano</h1>
         <p class="text-lg sm:text-xl text-white/90">
-          18 de dezembro de 2026 (sexta-feira) • 16h às 22h
+          18 de dezembro de 2026 (sexta-feira)
+        </p>
+        <p class="text-2xl sm:text-3xl font-extrabold text-confra-gold my-2">
+          16h às 22h
         </p>
         <p class="text-white/90 mb-6">Salão de Eventos ASMEGO — Rua 72 c/ BR-153, Jardim Goiás, Goiânia-GO</p>
         <p class="max-w-2xl mx-auto text-white/95 leading-relaxed">
