@@ -181,3 +181,20 @@ def test_checkin_tambem_aceita_cpf_como_codigo(client):
     )
     assert reuso.status_code == 200
     assert reuso.json()["ja_utilizado"] is True
+
+
+def test_admin_pode_reenviar_email_apenas_de_inscricao_aprovada_ou_rejeitada(client):
+    resp = _submit_inscricao(client, cpf="529.982.247-25", email="reenviar@example.com")
+    assert resp.status_code == 201
+    inscricao_id = resp.json()["id"]
+
+    headers = {"Authorization": f"Bearer {_admin_token(client)}"}
+
+    pendente = client.post(f"/api/admin/inscricoes/{inscricao_id}/reenviar-email", headers=headers)
+    assert pendente.status_code == 400
+
+    client.post(f"/api/admin/inscricoes/{inscricao_id}/aprovar", headers=headers)
+    reenvio = client.post(f"/api/admin/inscricoes/{inscricao_id}/reenviar-email", headers=headers)
+    assert reenvio.status_code == 200
+    assert reenvio.json()["status"] == "aprovado"
+    assert reenvio.json()["email_enviado"] is True

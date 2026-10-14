@@ -12,6 +12,8 @@ WorkingDirectory=/opt/confra/backend
 # Porta 33269 escolhida por ser alta/incomum, para nao colidir com outros apps
 # ja hospedados nesta VPS. Confirme que esta livre antes do deploy: sudo ss -tlnp | grep 33269
 ExecStart=/opt/confra/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 33269 --proxy-headers --forwarded-allow-ips=127.0.0.1
+# Sem buffer no stdout: os print() de erro (ex.: falha de e-mail) chegam ao journal na hora.
+Environment=PYTHONUNBUFFERED=1
 Restart=on-failure
 RestartSec=5
 

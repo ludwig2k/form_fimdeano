@@ -84,6 +84,14 @@
                 Rejeitar
               </button>
               <button
+                v-if="i.status !== 'pendente'"
+                class="text-sm text-confra-green font-semibold underline disabled:opacity-60"
+                :disabled="reenviandoId === i.id"
+                @click="pedirConfirmacao('reenviar', i.id)"
+              >
+                {{ reenviandoId === i.id ? 'Reenviando...' : 'Reenviar e-mail' }}
+              </button>
+              <button
                 class="text-sm text-gray-500 font-semibold underline ml-auto"
                 @click="pedirConfirmacao('excluir', i.id)"
               >
@@ -110,7 +118,7 @@
         v-if="confirmacaoAlvo"
         :title="tituloConfirmacao"
         :message="mensagemConfirmacao"
-        :confirm-label="confirmacaoAlvo.tipo === 'excluir' ? 'Excluir' : 'Aprovar'"
+        :confirm-label="rotulosConfirmacao[confirmacaoAlvo.tipo].botao"
         :danger="confirmacaoAlvo.tipo === 'excluir'"
         @confirm="confirmarAcao"
         @cancel="confirmacaoAlvo = null"
@@ -168,16 +176,28 @@ const motivoRejeicao = ref('')
 const mensagem = ref(null)
 const confirmacaoAlvo = ref(null)
 const exportando = ref(false)
+const reenviandoId = ref(null)
 let mensagemTimeout = null
 
-const tituloConfirmacao = computed(() =>
-  confirmacaoAlvo.value?.tipo === 'excluir' ? 'Excluir inscrição' : 'Aprovar inscrição'
-)
-const mensagemConfirmacao = computed(() =>
-  confirmacaoAlvo.value?.tipo === 'excluir'
-    ? 'Tem certeza que deseja excluir esta inscrição? Essa ação não pode ser desfeita.'
-    : 'Um e-mail com o QR Code de entrada será enviado ao servidor. Deseja continuar?'
-)
+const rotulosConfirmacao = {
+  aprovar: {
+    titulo: 'Aprovar inscrição',
+    mensagem: 'Um e-mail com o QR Code de entrada será enviado ao servidor. Deseja continuar?',
+    botao: 'Aprovar',
+  },
+  excluir: {
+    titulo: 'Excluir inscrição',
+    mensagem: 'Tem certeza que deseja excluir esta inscrição? Essa ação não pode ser desfeita.',
+    botao: 'Excluir',
+  },
+  reenviar: {
+    titulo: 'Reenviar e-mail',
+    mensagem: 'O e-mail correspondente ao status atual da inscrição (aprovação com QR Code ou rejeição) será enviado novamente. Deseja continuar?',
+    botao: 'Reenviar',
+  },
+}
+const tituloConfirmacao = computed(() => rotulosConfirmacao[confirmacaoAlvo.value?.tipo]?.titulo || '')
+const mensagemConfirmacao = computed(() => rotulosConfirmacao[confirmacaoAlvo.value?.tipo]?.mensagem || '')
 const filtroLabelAtual = computed(() => filtros.find((f) => f.value === filtroAtual.value)?.label || 'Todas')
 
 function avisar(tipo, texto) {
@@ -246,6 +266,8 @@ async function confirmarAcao() {
   confirmacaoAlvo.value = null
   if (tipo === 'excluir') {
     await executarExclusao(id)
+  } else if (tipo === 'reenviar') {
+    await executarReenvioEmail(id)
   } else {
     await executarAprovacao(id)
   }
@@ -265,13 +287,29 @@ async function executarAprovacao(id) {
   try {
     const resp = await client.post(`/admin/inscricoes/${id}/aprovar`)
     if (resp.data.email_enviado === false) {
-      avisar('erro', 'Inscrição aprovada, mas o e-mail de confirmação falhou ao enviar. Verifique a configuração de SMTP.')
+      avisar('erro', 'Inscrição aprovada, mas o e-mail de confirmação falhou ao enviar. Use "Reenviar e-mail" para tentar de novo.')
     } else {
       avisar('sucesso', 'Inscrição aprovada e e-mail enviado.')
     }
     await carregar()
   } catch (e) {
     avisar('erro', mensagemErro(e, 'Não foi possível aprovar a inscrição.'))
+  }
+}
+
+async function executarReenvioEmail(id) {
+  reenviandoId.value = id
+  try {
+    const resp = await client.post(`/admin/inscricoes/${id}/reenviar-email`)
+    if (resp.data.email_enviado === false) {
+      avisar('erro', 'O e-mail falhou ao enviar novamente. Tente de novo em alguns minutos.')
+    } else {
+      avisar('sucesso', 'E-mail reenviado.')
+    }
+  } catch (e) {
+    avisar('erro', mensagemErro(e, 'Não foi possível reenviar o e-mail.'))
+  } finally {
+    reenviandoId.value = null
   }
 }
 
@@ -286,7 +324,7 @@ async function confirmarRejeicao() {
     const resp = await client.post(`/admin/inscricoes/${rejeicaoAlvo.value}/rejeitar`, { motivo: motivoRejeicao.value })
     rejeicaoAlvo.value = null
     if (resp.data.email_enviado === false) {
-      avisar('erro', 'Inscrição rejeitada, mas o e-mail ao servidor falhou ao enviar. Verifique a configuração de SMTP.')
+      avisar('erro', 'Inscrição rejeitada, mas o e-mail ao servidor falhou ao enviar. Use "Reenviar e-mail" para tentar de novo.')
     } else {
       avisar('sucesso', 'Inscrição rejeitada e e-mail enviado.')
     }

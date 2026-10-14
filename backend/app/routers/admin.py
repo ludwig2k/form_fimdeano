@@ -92,19 +92,8 @@ def aprovar_inscricao(inscricao_id: int, db: Session = Depends(get_db), _: str =
     db.commit()
     db.refresh(inscricao)
 
-    email_enviado = True
-    try:
-        qr_bytes = qrcode_service.generate_qr_png_bytes(inscricao.qr_token)
-        email_service.send_aprovacao_email(
-            inscricao.email, inscricao.nome_completo, format_cpf(inscricao.cpf), qr_bytes
-        )
-    except Exception:
-        email_enviado = False
-        print(f"[admin] Falha ao enviar e-mail de aprovacao para {inscricao.email}:")
-        print(traceback.format_exc())
-
     resultado = schemas.InscricaoAdminOut.model_validate(inscricao)
-    resultado.email_enviado = email_enviado
+    resultado.email_enviado = _enviar_email_aprovacao(inscricao)
     return resultado
 
 
@@ -124,18 +113,56 @@ def rejeitar_inscricao(
     db.commit()
     db.refresh(inscricao)
 
-    email_enviado = True
-    try:
-        reenvio_url = f"{settings.public_base_url}/reenvio/{inscricao.reenvio_token}"
-        email_service.send_rejeicao_email(inscricao.email, inscricao.nome_completo, payload.motivo, reenvio_url)
-    except Exception:
-        email_enviado = False
-        print(f"[admin] Falha ao enviar e-mail de rejeicao para {inscricao.email}:")
-        print(traceback.format_exc())
+    resultado = schemas.InscricaoAdminOut.model_validate(inscricao)
+    resultado.email_enviado = _enviar_email_rejeicao(inscricao)
+    return resultado
+
+
+@router.post("/inscricoes/{inscricao_id}/reenviar-email", response_model=schemas.InscricaoAdminOut)
+def reenviar_email(inscricao_id: int, db: Session = Depends(get_db), _: str = Depends(require_admin)):
+    inscricao = db.get(models.Inscricao, inscricao_id)
+    if not inscricao:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inscrição não encontrada.")
+
+    if inscricao.status == models.InscricaoStatus.aprovado:
+        email_enviado = _enviar_email_aprovacao(inscricao)
+    elif inscricao.status == models.InscricaoStatus.rejeitado:
+        email_enviado = _enviar_email_rejeicao(inscricao)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Só é possível reenviar e-mail de inscrições aprovadas ou rejeitadas.",
+        )
 
     resultado = schemas.InscricaoAdminOut.model_validate(inscricao)
     resultado.email_enviado = email_enviado
     return resultado
+
+
+def _enviar_email_aprovacao(inscricao: models.Inscricao) -> bool:
+    try:
+        qr_bytes = qrcode_service.generate_qr_png_bytes(inscricao.qr_token)
+        email_service.send_aprovacao_email(
+            inscricao.email, inscricao.nome_completo, format_cpf(inscricao.cpf), qr_bytes
+        )
+        return True
+    except Exception:
+        print(f"[admin] Falha ao enviar e-mail de aprovacao para {inscricao.email}:")
+        print(traceback.format_exc())
+        return False
+
+
+def _enviar_email_rejeicao(inscricao: models.Inscricao) -> bool:
+    try:
+        reenvio_url = f"{settings.public_base_url}/reenvio/{inscricao.reenvio_token}"
+        email_service.send_rejeicao_email(
+            inscricao.email, inscricao.nome_completo, inscricao.motivo_rejeicao, reenvio_url
+        )
+        return True
+    except Exception:
+        print(f"[admin] Falha ao enviar e-mail de rejeicao para {inscricao.email}:")
+        print(traceback.format_exc())
+        return False
 
 
 @router.get("/anexos", response_model=list[schemas.AnexoOut])
