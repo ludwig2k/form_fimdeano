@@ -147,7 +147,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import InscricaoForm from '../components/InscricaoForm.vue'
 import fundoHome from '../assets/fundo-home.jpg'
-import pixQrCode from '../assets/pix-qrcode.png'
+import pixQrCode1Lote from '../assets/pix-qrcode-1lote.png'
+import pixQrCode2Lote from '../assets/pix-qrcode-2lote.png'
 
 const destaques = [
   { emoji: '🍻', texto: 'Open bar e Open food!' },
@@ -155,9 +156,24 @@ const destaques = [
   { emoji: '🎉', texto: 'Você será liberado 12h para preparação para festa!' },
 ]
 
-// 1º lote até 06/11/2026 (inclusive); 2º lote a partir de 07/11/2026.
-const DATA_CORTE_LOTE = new Date('2026-11-07T00:00:00')
-const loteAtivo = computed(() => (new Date() < DATA_CORTE_LOTE ? 1 : 2))
+// 1º lote até 03/11/2026 (inclusive); 2º lote a partir de 04/11/2026, 00h no horário de Brasília.
+const DATA_CORTE_LOTE = new Date('2026-11-04T00:00:00-03:00')
+const agora = ref(Date.now())
+const loteAtivo = computed(() => (agora.value < DATA_CORTE_LOTE.getTime() ? 1 : 2))
+// Valor e QR Code do PIX acompanham o lote vigente.
+const pixQrCode = computed(() => (loteAtivo.value === 1 ? pixQrCode1Lote : pixQrCode2Lote))
+
+// Quem estiver com a página aberta na virada troca de lote sem precisar recarregar.
+let timerVirada = null
+function agendarViradaDeLote() {
+  const restante = DATA_CORTE_LOTE.getTime() - Date.now()
+  if (restante <= 0) return
+  // setTimeout não aceita mais de ~24,8 dias; reagenda em etapas se faltar mais que isso.
+  timerVirada = setTimeout(() => {
+    agora.value = Date.now()
+    agendarViradaDeLote()
+  }, Math.min(restante + 1000, 2 ** 31 - 1))
+}
 
 const CHAVE_PIX = 'fdds.sgi@gmail.com'
 const chaveCopiada = ref(false)
@@ -187,6 +203,12 @@ const pixAmpliado = ref(false)
 function fecharComEsc(event) {
   if (event.key === 'Escape') pixAmpliado.value = false
 }
-onMounted(() => window.addEventListener('keydown', fecharComEsc))
-onBeforeUnmount(() => window.removeEventListener('keydown', fecharComEsc))
+onMounted(() => {
+  window.addEventListener('keydown', fecharComEsc)
+  agendarViradaDeLote()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', fecharComEsc)
+  clearTimeout(timerVirada)
+})
 </script>
