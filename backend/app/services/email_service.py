@@ -45,7 +45,7 @@ def send_aprovacao_email(to_email: str, nome_completo: str, cpf_formatado: str, 
         Se a leitura do QR Code não funcionar na entrada, informe seu CPF para a equipe:<br/>
         <code style="font-size:14px; background:#f5f5f5; padding:4px 8px; border-radius:4px; display:inline-block; margin-top:4px;">{cpf_formatado}</code>
       </p>
-      <p><strong>Data:</strong> 18/12/2026 (sexta-feira), das 16h às 22h<br/>
+      <p><strong>Data:</strong> 18/12/2026 (sexta-feira), das 12h às 18h<br/>
       <strong>Local:</strong> Salão de Eventos da ASMEGO — Rua 72 esquina com a BR-153,
       Jardim Goiás, Goiânia-GO<br/>
       <span style="color:#8b1d24;">⚠️ Não haverá estacionamento no local.</span></p>

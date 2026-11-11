@@ -22,20 +22,18 @@
           18 de dezembro de 2026 (sexta-feira)
         </p>
         <p class="text-2xl sm:text-3xl font-extrabold text-confra-gold my-2">
-          16h às 22h
+          12h às 18h
         </p>
         <p class="text-white/90 mb-6">Salão de Eventos ASMEGO — Rua 72 c/ BR-153, Jardim Goiás, Goiânia-GO</p>
         <p class="max-w-2xl mx-auto text-white/95 leading-relaxed">
           Depois de mais um ano de muito trabalho, chegou a hora de comemorar nossas conquistas:
           encontro com colegas e amigos, chopp gelado, comida saborosa e muita música boa!
-          Uma tardezinha e noite pensadas pra gente celebrar quem faz a SEAD acontecer:
-          <strong>você</strong>.
         </p>
       </div>
     </header>
 
-    <section class="max-w-5xl mx-auto px-4 py-12">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <section class="max-w-3xl mx-auto px-4 py-12">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div v-for="destaque in destaques" :key="destaque.texto" class="bg-white rounded-xl shadow p-6 text-center">
           <p class="text-4xl mb-3">{{ destaque.emoji }}</p>
           <p class="font-bold text-confra-green">{{ destaque.texto }}</p>
@@ -153,7 +151,6 @@ import pixQrCode2Lote from '../assets/pix-qrcode-2lote.png'
 const destaques = [
   { emoji: '🍻', texto: 'Open bar e Open food!' },
   { emoji: '🎶', texto: 'Muita música boa' },
-  { emoji: '🎉', texto: 'Você será liberado 12h para preparação para festa!' },
 ]
 
 // 1º lote até 03/11/2026 (inclusive); 2º lote a partir de 04/11/2026, 00h no horário de Brasília.
